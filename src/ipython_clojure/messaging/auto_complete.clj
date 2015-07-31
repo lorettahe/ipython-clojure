@@ -10,7 +10,7 @@
         cursor-pos (get-in message [:content :cursor_pos])
         code-up-to-cursor (subs code 0 (inc cursor-pos))
         last-space (.lastIndexOf code-up-to-cursor " ")
-        last-non-space-symbol (if (>= last-space 0) (subs code-up-to-cursor (inc last-space)))
+        last-non-space-symbol (if (>= last-space 0) (subs code-up-to-cursor (inc last-space)) code-up-to-cursor)
         actual-symbol (clojure.string/replace last-non-space-symbol #"[(\[{,}\])]+" "")
         code-count (count actual-symbol)
         resp (-> (nrepl/client nrepl-conn 1000)

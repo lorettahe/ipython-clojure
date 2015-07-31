@@ -10,7 +10,7 @@
                          {:name             "clojure"
                           :version          "1.5.1"
                           :mimetype         "text/plain"
-                          :file_extension   "clj"}})
+                          :file_extension   ".clj"}})
 
 (defmethod reply-to-message "kernel_info_request"
   [message shell-socket iopub-socket nrepl-conn]

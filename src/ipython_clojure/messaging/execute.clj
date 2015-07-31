@@ -21,7 +21,6 @@
 
 (defn execute [repl-conn request]
   (let [resp (repl/message (repl/client repl-conn 1000) {:op "eval" :code (get-in request [:content :code])})]
-    (println resp)
     (swap! nrepl-session (fn [_] (-> resp first :session)))
     (first (repl/response-values resp))))
 
@@ -34,12 +33,11 @@
     (swap! execution-count inc)
     (send-message iopub-socket "status" username (status-content "busy")
                   parent-header {} session-id)
-    (send-message iopub-socket "pyin" username (pyin-content @execution-count message)
+    (send-message iopub-socket "execute_input" username (pyin-content @execution-count message)
                   parent-header {} session-id)
     (send-message shell-socket "execute_reply" username
                   {:status "ok"
                    :execution_count @execution-count
-                   :user_variables {}
                    :payload [{:source "page" :data {:text/plain (str execute-result)} :start 0}]
                    :user_expressions {}}
                   parent-header
@@ -47,7 +45,7 @@
                    :engine session-id
                    :status "ok"
                    :started (now)} session-id)
-    (send-message iopub-socket "pyout" username (pyout-content @execution-count execute-result)
+    (send-message iopub-socket "execute_result" username (pyout-content @execution-count execute-result)
                   parent-header {} session-id)
     (send-message iopub-socket "status" username (status-content "idle")
                   parent-header {} session-id)))
