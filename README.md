@@ -8,18 +8,34 @@ A IPython kernel written in Clojure, this will let you run Clojure code from the
 2. make a new profile with `ipython profile create clojure`
 3. add these lines to your ipython_config.py located in .ipython/profile_clojure/ipython_config.py
 
-```
-# Set the kernel command.
-c = get_config()
-c.KernelManager.kernel_cmd = ["/Users/rory/cache/ipython-clojure/bin/ipython-clojure",
-                              "{connection_file}"]
+  ```
+  # Set the kernel command.
+  c = get_config()
+  # replace $(IPYTHON_CLOJURE_ROOT) with the actual path on your disk
+  c.KernelManager.kernel_cmd = ["${IPYTHON_CLOJURE_ROOT}/bin/ipython-clojure",
+                              "{connection_file}"] 
 
-# Disable authentication.
-c.Session.key = b''
-c.Session.keyfile = b''
-```
+  # Disable authentication.
+  c.Session.key = b''
+  c.Session.keyfile = b''
+  ```
 
-4. run the repl with `ipython console --profile clojure`
+4. If you want to be able to use notebooks, do the following as well:
+  (1) If you don't have a directory named ~/.ipython/kernels, create one.
+  (2) Run `mkdir -p ~/.ipython/kernels/clojure`
+  (3) Make a new file named 'kernel.json' under ~/.ipython/kernels/clojure, and add the following lines:
+  
+  ```
+  {
+    "argv": ["${IPYTHON_CLOJURE_ROOT}/bin/ipython-clojure", "{connection_file}"],
+    "display_name": "Clojure",
+    "language": "clojure"
+  }
+  ```     
+  
+5. run the repl with `ipython console --profile clojure`
+  
+  or run the notebook with `ipython notebook --profile clojure`
 
 ## status
-Should work for simple stuff in the REPL. Doesn't handle errors or any type of complex data from Clojure.
+Currently supports code execution and auto-complete. More implementations of the iPython messaging protocols to come.
