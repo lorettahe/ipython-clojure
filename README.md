@@ -21,9 +21,10 @@ A IPython kernel written in Clojure, this will let you run Clojure code from the
   ```
 
 4. If you want to be able to use notebooks, do the following as well:
-  (1) If you don't have a directory named ~/.ipython/kernels, create one.
-  (2) Run `mkdir -p ~/.ipython/kernels/clojure`
-  (3) Make a new file named 'kernel.json' under ~/.ipython/kernels/clojure, and add the following lines:
+  
+  (1) Run `mkdir -p ~/.ipython/kernels/clojure`
+  
+  (2) Make a new file named 'kernel.json' under ~/.ipython/kernels/clojure, and add the following lines:
   
   ```
   {
