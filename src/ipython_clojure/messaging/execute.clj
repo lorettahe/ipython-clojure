@@ -14,15 +14,51 @@
   {:execution_count execution-count
    :code (get-in message [:content :code])})
 
-(defn pyout-content [execution-count execute-result]
-  {:execution_count execution-count
-   :data {:text/plain (str execute-result)}
-   :metadata {}})
+(defn prepare-resp
+  [resp]
+  (->> resp (map repl/read-response-value) repl/combine-responses))
 
 (defn execute [repl-conn request]
-  (let [resp (repl/message (repl/client repl-conn 1000) {:op "eval" :code (get-in request [:content :code])})]
+  (let [resp (repl/message (repl/client repl-conn 1000) {:op "eval" :code (get-in request [:content :code])})
+        prepared-resp (prepare-resp resp)]
     (swap! nrepl-session (fn [_] (-> resp first :session)))
-    (first (repl/response-values resp))))
+    (if (:value prepared-resp)
+      {:value (first (:value prepared-resp))}
+      (select-keys prepared-resp [:err :root-ex :ex]))))
+
+(defn execute-reply-message
+  [execute-result]
+  (if (:err execute-result)
+    {:status "error"
+     :execution_count @execution-count
+     :ename (:ex execute-result)
+     :evalue (:err execute-result)
+     :traceback [(:err execute-result)]}
+    {:status "ok"
+     :execution_count @execution-count
+     :payload [{:source "page" :data {:text/plain (str (:value execute-result))} :start 0}]
+     :user_expressions {}}))
+
+(defn send-out-message!
+  [iopub-socket username parent-header session-id execute-result]
+  (if (:err execute-result)
+    (do
+      (send-message iopub-socket "error" username
+                  {:execution_count @execution-count
+                   :ename (:ex execute-result)
+                   :evalue (:err execute-result)
+                   :traceback []}
+                  parent-header {} session-id)
+      (send-message iopub-socket "execute_result" username
+                    {:execution_count @execution-count
+                     :data {:text/plain (str (:err execute-result))}
+                     :metadata {}}
+                    parent-header {} session-id))
+    (send-message iopub-socket "execute_result" username
+                  {:execution_count @execution-count
+                   :data {:text/plain (str (:value execute-result))}
+                   :metadata {}}
+                  parent-header {} session-id)))
 
 (defmethod reply-to-message "execute_request"
   [message shell-socket iopub-socket nrepl-conn]
@@ -36,17 +72,13 @@
     (send-message iopub-socket "execute_input" username (pyin-content @execution-count message)
                   parent-header {} session-id)
     (send-message shell-socket "execute_reply" username
-                  {:status "ok"
-                   :execution_count @execution-count
-                   :payload [{:source "page" :data {:text/plain (str execute-result)} :start 0}]
-                   :user_expressions {}}
+                  (execute-reply-message execute-result)
                   parent-header
                   {:dependencies_met "True"
                    :engine session-id
                    :status "ok"
                    :started (now)} session-id)
-    (send-message iopub-socket "execute_result" username (pyout-content @execution-count execute-result)
-                  parent-header {} session-id)
+    (send-out-message! iopub-socket username parent-header session-id execute-result)
     (send-message iopub-socket "status" username (status-content "idle")
                   parent-header {} session-id)))
 
