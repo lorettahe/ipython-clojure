@@ -13,7 +13,7 @@
                           :file_extension   ".clj"}})
 
 (defmethod reply-to-message "kernel_info_request"
-  [message shell-socket iopub-socket nrepl-conn]
+  [message shell-socket iopub-socket repl-client]
   (send-message
     shell-socket
     "kernel_info_reply"

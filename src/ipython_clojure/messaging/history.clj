@@ -3,7 +3,7 @@
             [ipython-clojure.messaging.utils :refer :all]))
 
 (defmethod reply-to-message "history_request"
-  [message shell-socket iopub-socket nrepl-conn]
+  [message shell-socket iopub-socket repl-client]
   (send-message
     shell-socket
     "history_reply"
