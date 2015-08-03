@@ -22,12 +22,14 @@
   (let [resp (repl/message (repl/client repl-conn 1000) {:op "eval" :code (get-in request [:content :code])})
         prepared-resp (prepare-resp resp)]
     (swap! nrepl-session (fn [_] (-> resp first :session)))
+    (println prepared-resp)
     (if (:value prepared-resp)
-      {:value (first (:value prepared-resp))}
-      (select-keys prepared-resp [:err :root-ex :ex]))))
+      {:value (first (:value prepared-resp)) :out (:out prepared-resp)}
+      (select-keys prepared-resp [:err :root-ex :ex :out]))))
 
 (defn execute-reply-message
   [execute-result]
+  (println execute-result)
   (if (:err execute-result)
     {:status "error"
      :execution_count @execution-count
@@ -38,6 +40,13 @@
      :execution_count @execution-count
      :payload [{:source "page" :data {:text/plain (str (:value execute-result))} :start 0}]
      :user_expressions {}}))
+
+(defn concatenate-out-on-front
+  [execute-result]
+  (let [original-value (if (:err execute-result) (:err execute-result) (:value execute-result))]
+    (if (:out execute-result)
+      (str (:out execute-result) original-value)
+      (str original-value))))
 
 (defn send-out-message!
   [iopub-socket username parent-header session-id execute-result]
@@ -51,12 +60,12 @@
                   parent-header {} session-id)
       (send-message iopub-socket "execute_result" username
                     {:execution_count @execution-count
-                     :data {:text/plain (str (:err execute-result))}
+                     :data {:text/plain (concatenate-out-on-front execute-result)}
                      :metadata {}}
                     parent-header {} session-id))
     (send-message iopub-socket "execute_result" username
                   {:execution_count @execution-count
-                   :data {:text/plain (str (:value execute-result))}
+                   :data {:text/plain (concatenate-out-on-front execute-result)}
                    :metadata {}}
                   parent-header {} session-id)))
 
@@ -71,6 +80,9 @@
                   parent-header {} session-id)
     (send-message iopub-socket "execute_input" username (pyin-content @execution-count message)
                   parent-header {} session-id)
+    (when (:out execute-result)
+      (send-message shell-socket "stream" username {:name "stdout" :text (:out execute-result)}
+                    parent-header {} session-id))
     (send-message shell-socket "execute_reply" username
                   (execute-reply-message execute-result)
                   parent-header
