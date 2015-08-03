@@ -32,7 +32,24 @@ A IPython kernel written in Clojure, this will let you run Clojure code from the
     "display_name": "Clojure",
     "language": "clojure"
   }
-  ```     
+  ```
+  
+  (3) Edit `~/.ipython/profile_clojure/static/custom/custom.js` and add the following lines:
+  
+  ```
+  define([
+    'base/js/namespace',
+    'base/js/events'
+    ],
+    function(IPython, events) {
+        events.on("app_initialized.NotebookApp",
+            function () {
+                IPython.Cell.options_default.cm_config.indentUnit = 2;
+            }
+        );
+    }
+  );
+  ```
   
 5. run the repl with `ipython console --profile clojure`
   
