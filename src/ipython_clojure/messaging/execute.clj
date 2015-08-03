@@ -22,14 +22,12 @@
   (let [resp (repl/message (repl/client repl-conn 1000) {:op "eval" :code (get-in request [:content :code])})
         prepared-resp (prepare-resp resp)]
     (swap! nrepl-session (fn [_] (-> resp first :session)))
-    (println prepared-resp)
     (if (:value prepared-resp)
       {:value (first (:value prepared-resp)) :out (:out prepared-resp)}
       (select-keys prepared-resp [:err :root-ex :ex :out]))))
 
 (defn execute-reply-message
   [execute-result]
-  (println execute-result)
   (if (:err execute-result)
     {:status "error"
      :execution_count @execution-count

@@ -44,12 +44,18 @@
   []
   (default-handler wrap-complete))
 
+(defn requiring-doc-and-source
+  [nrepl-conn]
+  (-> (repl/client nrepl-conn 1000)
+      (repl/message {:op "eval" :code "(require '[clojure.repl :refer [doc source]])"})))
+
 (defn -main [& args]
   (let [hb-addr (address (prep-config args) :hb_port)
         shell-addr (address (prep-config args) :shell_port)
         iopub-addr (address (prep-config args) :iopub_port)
         nrepl-server (start-server :handler (nrepl-handler))]
     (with-open [conn (repl/connect :port (:port nrepl-server))]
+      (requiring-doc-and-source conn)
       (println (prep-config args))
       (println (str "Connecting heartbeat to " hb-addr))
       (-> hb-addr heart-beat Thread. .start)
