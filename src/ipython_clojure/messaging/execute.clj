@@ -15,9 +15,18 @@
   {:execution_count execution-count
    :code (get-in message [:content :code])})
 
+(defn safe-read-response-value
+  [{:keys [value] :as msg}]
+  (if-not (string? value)
+    msg
+    (try
+      (assoc msg :value (read-string value))
+      (catch Exception e
+        (assoc msg :value (str value))))))
+
 (defn prepare-resp
   [resp]
-  (->> resp (map repl/read-response-value) repl/combine-responses))
+  (->> resp (map safe-read-response-value) repl/combine-responses))
 
 (defn execute [repl-client request]
   (let [resp (repl/message repl-client {:op "eval" :code (get-in request [:content :code])})
