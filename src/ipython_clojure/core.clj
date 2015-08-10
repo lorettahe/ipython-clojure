@@ -4,11 +4,14 @@
            [zeromq.zmq :as zmq]
            [clojure.tools.nrepl :as repl]
            [clojure.tools.nrepl.server :refer [start-server stop-server default-handler]]
+           [cider.nrepl :refer [cider-nrepl-handler]]
            [cider.nrepl.middleware.complete :refer [wrap-complete]]
            [cider.nrepl.middleware.stacktrace :refer [wrap-stacktrace]]
            [ipython-clojure.messaging.utils :refer [read-message address]]
            [ipython-clojure.messaging.message-proto :refer :all]
-           [ipython-clojure.messaging execute history kernel-info auto-complete])
+           [ipython-clojure.messaging execute history kernel-info auto-complete]
+           [ipython-clojure.dependencies :as deps]
+           [cemerick.pomegranate :as pomegranate])
   (:gen-class :main true))
 
 (defn prep-config [args]
@@ -50,13 +53,18 @@
   (-> (repl/client nrepl-conn 1000)
       (repl/message {:op "eval" :code "(require '[clojure.repl :refer [doc source]])"})))
 
+
+
 (defn -main [& args]
   (let [hb-addr (address (prep-config args) :hb_port)
         shell-addr (address (prep-config args) :shell_port)
         iopub-addr (address (prep-config args) :iopub_port)
-        nrepl-server (start-server :handler (nrepl-handler))]
+        nrepl-server (start-server :handler cider-nrepl-handler)
+        _ (println (System/getProperty "user.dir"))]
     (with-open [conn (repl/connect :port (:port nrepl-server))]
       (requiring-doc-and-source conn)
+      (doseq [path (deps/get-project-classpath)]
+        (pomegranate/add-classpath path))
       (println (prep-config args))
       (println (str "Connecting heartbeat to " hb-addr))
       (-> hb-addr heart-beat Thread. .start)

@@ -12,7 +12,8 @@
                  [org.clojure/data.json "0.2.4"]
                  [org.clojure/tools.nrepl "0.2.10"]
                  [cider/cider-nrepl "0.9.1"]
-                 [digest "1.4.4"]]
+                 [digest "1.4.4"]
+                 [leiningen-core "2.5.2"]]
   :aot [ipython-clojure.core]
   :main ipython-clojure.core
   :jvm-opts ["-Xmx250m"]
