@@ -20,7 +20,7 @@
 
 (defn read-blob [socket]
   (let [part (zmq/receive socket)
-        blob (apply str (map char part))]
+        blob (String. part "UTF-8")]
     blob))
 
 (defn read-until-delimiter [socket]
