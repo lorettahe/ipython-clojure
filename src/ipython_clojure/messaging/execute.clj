@@ -29,25 +29,31 @@
   (->> resp (map safe-read-response-value) repl/combine-responses))
 
 (defn execute [repl-client request]
-  (let [resp (repl/message repl-client {:op "eval" :code (get-in request [:content :code])})
-        prepared-resp (prepare-resp resp)]
-    (swap! nrepl-session (fn [_] (-> resp first :session)))
-    (if (:value prepared-resp)
-      {:value (first (:value prepared-resp)) :out (:out prepared-resp)}
-      (select-keys prepared-resp [:err :root-ex :ex :out]))))
+  (if (and (get-in request [:content :code]) (= "exit" (.trim (get-in request [:content :code]))))
+    :exit
+    (let [resp (repl/message repl-client {:op "eval" :code (get-in request [:content :code])})
+          prepared-resp (prepare-resp resp)]
+      (swap! nrepl-session (fn [_] (-> resp first :session)))
+      (if (:value prepared-resp)
+        {:value (first (:value prepared-resp)) :out (:out prepared-resp)}
+        (select-keys prepared-resp [:err :root-ex :ex :out])))))
 
 (defn execute-reply-message
   [execute-result exception-stacktrace]
-  (if (:err execute-result)
-    {:status "error"
-     :execution_count @execution-count
-     :ename (:ex execute-result)
-     :evalue (:err execute-result)
-     :traceback [exception-stacktrace]}
+  (if (= :exit execute-result)
     {:status "ok"
      :execution_count @execution-count
-     :payload [{:source "page" :data {:text/plain (str (:value execute-result))} :start 0}]
-     :user_expressions {}}))
+     :payload [{:source "ask_exit" :keepkernel false}]}
+    (if (:err execute-result)
+      {:status          "error"
+       :execution_count @execution-count
+       :ename           (:ex execute-result)
+       :evalue          (:err execute-result)
+       :traceback       [exception-stacktrace]}
+      {:status           "ok"
+       :execution_count  @execution-count
+       :payload          [{:source "page" :data {:text/plain (str (:value execute-result))} :start 0}]
+       :user_expressions {}})))
 
 (defn send-out-message!
   [iopub-socket username parent-header session-id execute-result exception-stacktrace]

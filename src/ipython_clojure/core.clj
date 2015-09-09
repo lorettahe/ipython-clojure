@@ -9,7 +9,7 @@
            [cider.nrepl.middleware.stacktrace :refer [wrap-stacktrace]]
            [ipython-clojure.messaging.utils :refer [read-message address]]
            [ipython-clojure.messaging.message-proto :refer :all]
-           [ipython-clojure.messaging execute history kernel-info auto-complete]
+           [ipython-clojure.messaging execute history kernel-info auto-complete shutdown]
            [ipython-clojure.dependencies :as deps]
            [cemerick.pomegranate :as pomegranate])
   (:gen-class :main true))
@@ -41,7 +41,6 @@
         shell-handler (configure-shell-handler shell-socket iopub-socket repl-client)]
     (while (not (.. Thread currentThread isInterrupted))
       (let [message (read-message shell-socket)]
-        (println "Receieved message on shell socket: " message)
         (shell-handler message)))))
 
 (defn nrepl-handler
@@ -59,8 +58,7 @@
   (let [hb-addr (address (prep-config args) :hb_port)
         shell-addr (address (prep-config args) :shell_port)
         iopub-addr (address (prep-config args) :iopub_port)
-        nrepl-server (start-server :handler cider-nrepl-handler)
-        _ (println (System/getProperty "user.dir"))]
+        nrepl-server (start-server :handler cider-nrepl-handler)]
     (with-open [conn (repl/connect :port (:port nrepl-server))]
       (requiring-doc-and-source conn)
       (doseq [path (deps/get-project-classpath)]

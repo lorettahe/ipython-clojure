@@ -7,9 +7,7 @@
 (defmethod reply-to-message "complete_request"
   [message shell-socket iopub-socket repl-client]
   (let [code (get-in message [:content :code])
-        _ (println code)
         cursor-pos (get-in message [:content :cursor_pos])
-        _ (println cursor-pos)
         code-up-to-cursor (subs code 0 cursor-pos)
         last-space (.lastIndexOf code-up-to-cursor " ")
         last-non-space-symbol (if (>= last-space 0) (subs code-up-to-cursor (inc last-space)) code-up-to-cursor)
@@ -17,8 +15,6 @@
         code-count (count actual-symbol)
         resp (nrepl/message repl-client {:op "complete" :symbol actual-symbol :context "" :ns "user"})
         result (->> resp first :completions (map :candidate))]
-    (println resp)
-    (println "cursor_start:" (- cursor-pos code-count))
     (send-message
       shell-socket
       "complete_reply"

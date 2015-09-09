@@ -6,4 +6,4 @@
 
 (defmethod reply-to-message :not-implemented
   [message _ _ _]
-  (println "Messaging protocol not yet implemented for message type" (get-in message [:header :msg-type])))
+  (println "Messaging protocol not yet implemented for message type" (get-in message [:header :msg_type])))
