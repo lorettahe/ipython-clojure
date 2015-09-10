@@ -1,4 +1,4 @@
-(defproject ipython-clojure "0.1.1-SNAPSHOT"
+(defproject ipython-clojure "0.1.1"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
