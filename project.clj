@@ -13,7 +13,8 @@
                  [org.clojure/tools.nrepl "0.2.10"]
                  [cider/cider-nrepl "0.9.1"]
                  [digest "1.4.4"]
-                 [leiningen-core "2.5.2"]]
+                 [leiningen-core "2.5.2"]
+                 [incanter "1.9.0"]]
   :aot [ipython-clojure.core]
   :main ipython-clojure.core
   :jvm-opts ["-Xmx250m"]

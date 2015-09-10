@@ -52,7 +52,10 @@
   (-> (repl/client nrepl-conn 1000)
       (repl/message {:op "eval" :code "(require '[clojure.repl :refer [doc source]])"})))
 
-
+(defn require-ipython-draw
+  [nrepl-conn]
+  (-> (repl/client nrepl-conn 1000)
+      (repl/message {:op "eval" :code "(require '[ipython-clojure.chart-utils :refer [ipython-draw]])"})))
 
 (defn -main [& args]
   (let [hb-addr (address (prep-config args) :hb_port)
@@ -61,6 +64,7 @@
         nrepl-server (start-server :handler cider-nrepl-handler)]
     (with-open [conn (repl/connect :port (:port nrepl-server))]
       (requiring-doc-and-source conn)
+      (require-ipython-draw conn)
       (doseq [path (deps/get-project-classpath)]
         (pomegranate/add-classpath path))
       (println (prep-config args))
