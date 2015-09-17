@@ -37,7 +37,7 @@
           prepared-resp (prepare-resp resp)]
       (swap! nrepl-session (fn [_] (-> resp first :session)))
       (cond
-        (and (:value prepared-resp) (= :chart (:ipython-clojure.chart-utlls/type (first (:value prepared-resp)))))
+        (and (:value prepared-resp) (= :chart (:ipython-clojure.chart-utils/type (first (:value prepared-resp)))))
         {:value (:ipython-clojure.chart-utils/data (first (:value prepared-resp))) :out (:out prepared-resp) :type :chart}
 
         (:value prepared-resp)

@@ -5,6 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+                 [org.clojure/data.codec "0.1.0"]
                  [org.zeromq/jeromq "0.3.5"]
                  [cheshire "5.3.1"]
                  [clj-time "0.7.0"]

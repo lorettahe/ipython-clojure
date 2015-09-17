@@ -1,6 +1,6 @@
 (ns ipython-clojure.chart-utils
-  (:import [org.jfree.chart JFreeChart ChartUtilities]
-           (java.util Base64)))
+  (:require [clojure.data.codec.base64 :as b64])
+  (:import [org.jfree.chart JFreeChart ChartUtilities]))
 
 (defn get-chart-png-bytes
   [^JFreeChart chart]
@@ -9,6 +9,6 @@
 (defn ipython-draw
   [^JFreeChart chart]
   (let [bytes (get-chart-png-bytes chart)]
-    {:ipython-clojure.chart-utlls/type :chart
-     :ipython-clojure.chart-utils/data (String. (.encode (Base64/getEncoder) bytes))}))
+    {:ipython-clojure.chart-utils/type :chart
+     :ipython-clojure.chart-utils/data (String. (b64/encode bytes))}))
 
